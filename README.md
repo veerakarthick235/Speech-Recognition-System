@@ -14,7 +14,7 @@ A Flask-based web application that allows users to **upload or record audio**, t
 
 A Flask web app that converts speech (uploaded or recorded) into text using `SpeechRecognition` and Google API. It supports multiple languages and allows users to **download the transcript as a PDF**.
 
-> 🌐 [Live Demo](https://speech-recognition-system-srs.onrender.com/)  
+
 
 
 ---
