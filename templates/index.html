@@ -2,231 +2,1336 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>🎙️ Speech Recognition System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VoiceScribe – AI Speech-to-Text SaaS</title>
+  <meta name="description" content="VoiceScribe converts speech to accurate text in 25+ languages instantly. Upload audio or record live and export your transcript as PDF or TXT." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
-    /* Your existing styles remain unchanged */
+    /* ── Design Tokens ─────────────────────────────────────────── */
+    :root {
+      --bg-deep:     #070b14;
+      --bg-card:     rgba(255,255,255,0.04);
+      --bg-card-hov: rgba(255,255,255,0.07);
+      --border:      rgba(255,255,255,0.08);
+      --border-hov:  rgba(108,99,255,0.5);
+      --indigo:      #6c63ff;
+      --indigo-l:    #8a83ff;
+      --cyan:        #00d4ff;
+      --cyan-d:      #00a8cc;
+      --emerald:     #00e5a0;
+      --rose:        #ff4d6d;
+      --amber:       #ffb800;
+      --text-1:      #f0f2ff;
+      --text-2:      #9ba3c2;
+      --text-3:      #5c6484;
+      --radius-sm:   10px;
+      --radius-md:   16px;
+      --radius-lg:   24px;
+      --radius-xl:   36px;
+      --blur:        20px;
+      --shadow-glow: 0 0 40px rgba(108,99,255,0.25);
+      --shadow-card: 0 4px 30px rgba(0,0,0,0.4);
+      --transition:  0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #e0e8f0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
-      max-width: 700px;
+      background: var(--bg-deep);
+      color: var(--text-1);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+    select { font-family: inherit; }
+    img { max-width: 100%; }
+
+    /* ── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: var(--indigo); border-radius: 3px; }
+
+    /* ── Gradient Orbs (ambient background) ───────────────────── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: var(--indigo); top: -200px; left: -150px; }
+    .orb-2 { width: 500px; height: 500px; background: var(--cyan);   bottom: 0;   right: -100px; }
+    .orb-3 { width: 400px; height: 400px; background: var(--emerald); top: 50%;   left: 40%;  opacity: 0.1; }
+
+    /* ── Layout ────────────────────────────────────────────────── */
+    .container { max-width: 1200px; margin: auto; padding: 0 24px; position: relative; z-index: 1; }
+    section { padding: 100px 0; }
+
+    /* ── Navigation ────────────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(7,11,20,0.8);
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      max-width: 1200px;
       margin: auto;
-      user-select: none;
     }
-    h1 {
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.3rem;
+      letter-spacing: -0.02em;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text { background: linear-gradient(90deg, var(--indigo-l), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { font-size: 0.9rem; font-weight: 500; color: var(--text-2); transition: color var(--transition); }
+    .nav-links a:hover { color: var(--text-1); }
+    .nav-cta {
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 10px 22px;
+      border-radius: 50px;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,99,255,0.4); }
+
+    /* ── Hero ──────────────────────────────────────────────────── */
+    #hero {
+      padding: 130px 0 100px;
       text-align: center;
-      color: #0ff;
-      text-shadow: 0 0 8px #0ff, 0 0 20px #0ff, 0 0 30px #00f, 0 0 40px #0ff, 0 0 50px #00f;
-      font-weight: 900;
-      letter-spacing: 1.2px;
-      margin-bottom: 40px;
+      position: relative;
     }
-    .btn {
-      display: inline-block;
-      padding: 14px 28px;
-      margin: 12px 8px;
-      background: linear-gradient(45deg, #00ffff, #0066ff);
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 0 8px #00ffff, 0 0 15px #0066ff, inset 0 0 8px #00ffff;
-      color: #000;
-      font-weight: 700;
-      font-size: 1rem;
-      letter-spacing: 0.05em;
-      cursor: pointer;
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--indigo-l);
+      margin-bottom: 32px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .hero-badge span { width: 7px; height: 7px; background: var(--emerald); border-radius: 50%; animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.4); } }
+    h1.hero-title {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+    .gradient-text { background: linear-gradient(135deg, var(--indigo-l) 0%, var(--cyan) 60%, var(--emerald) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub {
+      max-width: 640px;
+      margin: 0 auto 48px;
+      font-size: 1.15rem;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+    .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      color: #fff; font-weight: 700; font-size: 1rem;
+      padding: 16px 32px; border-radius: 50px;
+      transition: transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 4px 20px rgba(108,99,255,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(108,99,255,0.45); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-1); font-weight: 600; font-size: 1rem;
+      padding: 16px 32px; border-radius: 50px;
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+      backdrop-filter: blur(var(--blur));
+    }
+    .btn-ghost:hover { background: var(--bg-card-hov); border-color: var(--border-hov); transform: translateY(-2px); }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, var(--indigo-l), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-label { font-size: 0.8rem; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+    /* ── Features ──────────────────────────────────────────────── */
+    #features { background: linear-gradient(180deg, transparent 0%, rgba(108,99,255,0.04) 50%, transparent 100%); }
+    .section-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--indigo-l); margin-bottom: 16px; }
+    .section-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 16px; }
+    .section-sub { color: var(--text-2); font-size: 1.05rem; max-width: 560px; }
+    .section-header { margin-bottom: 64px; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      transition: background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition);
       position: relative;
       overflow: hidden;
-      transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
-      user-select: none;
     }
-    .btn:hover, .btn:focus {
-      background: linear-gradient(45deg, #00ccff, #0044cc);
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, var(--indigo), transparent);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .feature-card:hover { background: var(--bg-card-hov); border-color: var(--border-hov); transform: translateY(-6px); box-shadow: var(--shadow-glow); }
+    .feature-card:hover::before { opacity: 0.04; }
+    .feature-icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+    .icon-indigo { background: rgba(108,99,255,0.15); }
+    .icon-cyan   { background: rgba(0,212,255,0.12); }
+    .icon-emerald{ background: rgba(0,229,160,0.12); }
+    .icon-amber  { background: rgba(255,184,0,0.12); }
+    .icon-rose   { background: rgba(255,77,109,0.12); }
+    .icon-purple { background: rgba(176,108,255,0.12); }
+    .feature-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+    .feature-card p  { font-size: 0.9rem; color: var(--text-2); line-height: 1.7; }
+
+    /* ── App Panel ─────────────────────────────────────────────── */
+    #app {
+      padding: 100px 0;
+    }
+    .app-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 48px;
+      backdrop-filter: blur(var(--blur));
+      -webkit-backdrop-filter: blur(var(--blur));
+      box-shadow: var(--shadow-card), var(--shadow-glow);
+      position: relative;
+      overflow: hidden;
+    }
+    .app-wrapper::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 48px; right: 48px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--indigo), var(--cyan), transparent);
+    }
+    .app-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 36px;
+    }
+    .app-top-left h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .app-top-left p  { color: var(--text-2); font-size: 0.9rem; }
+    .lang-wrapper { display: flex; flex-direction: column; gap: 6px; }
+    .lang-wrapper label { font-size: 0.75rem; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+    #langSelect {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-1);
+      font-size: 0.9rem;
+      padding: 10px 36px 10px 14px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ba3c2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      cursor: pointer;
+      transition: border-color var(--transition);
+      min-width: 200px;
+    }
+    #langSelect:hover, #langSelect:focus { border-color: var(--indigo); outline: none; }
+    #langSelect option { background: #141829; }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      width: fit-content;
+      margin-bottom: 32px;
+    }
+    .tab-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 0.875rem; font-weight: 600;
+      color: var(--text-2);
+      background: transparent;
+      transition: background var(--transition), color var(--transition);
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--indigo), #5a52e0);
       color: #fff;
-      box-shadow: 0 0 12px #00ccff, 0 0 20px #0044cc, inset 0 0 12px #00ccff;
-      outline: none;
+      box-shadow: 0 2px 12px rgba(108,99,255,0.4);
     }
-    .btn:active {
-      transform: scale(0.97);
-      box-shadow: 0 0 6px #0099cc, inset 0 0 6px #0099cc;
+    .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.06); color: var(--text-1); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Upload Zone */
+    #dropZone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 56px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      position: relative;
     }
-    .result, form {
-      margin: 25px 0;
-      padding: 16px 20px;
-      background: rgba(30, 30, 30, 0.85);
-      border-radius: 14px;
-      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(0, 255, 255, 0.1);
-      font-size: 1.1rem;
-      color: #d0f0ff;
-      min-height: 60px;
+    #dropZone.dragover { border-color: var(--indigo); background: rgba(108,99,255,0.08); }
+    .drop-icon { font-size: 56px; margin-bottom: 16px; display: block; }
+    .drop-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .drop-sub { color: var(--text-2); font-size: 0.875rem; margin-bottom: 20px; }
+    .file-types {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    }
+    .file-badge {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+    #fileInput { display: none; }
+    #selectedFile {
+      margin-top: 16px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: rgba(108,99,255,0.1);
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .btn-upload {
+      margin-top: 24px;
+      width: 100%;
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      color: #fff; font-weight: 700; font-size: 1rem;
+      padding: 16px; border-radius: var(--radius-sm);
+      transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+    }
+    .btn-upload:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(108,99,255,0.4); }
+    .btn-upload:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Record Panel */
+    .record-center { text-align: center; }
+    .waveform-container {
+      height: 80px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin: 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 0 24px;
+      overflow: hidden;
+    }
+    .wave-bar {
+      width: 4px;
+      background: linear-gradient(180deg, var(--indigo), var(--cyan));
+      border-radius: 2px;
+      height: 6px;
+      transition: height 0.1s;
+    }
+    .wave-bar.animate {
+      animation: wave-anim 0.8s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2n)   { animation-delay: 0.1s; }
+    .wave-bar:nth-child(3n)   { animation-delay: 0.2s; }
+    .wave-bar:nth-child(4n)   { animation-delay: 0.15s; }
+    .wave-bar:nth-child(5n)   { animation-delay: 0.05s; }
+    @keyframes wave-anim { 0%,100% { height: 6px; } 50% { height: 50px; } }
+    .record-timer { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-1); margin: 8px 0; }
+    .record-status { font-size: 0.875rem; color: var(--text-2); margin-bottom: 24px; }
+    .record-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-record {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 36px; border-radius: 50px; font-weight: 700; font-size: 1rem;
+      background: linear-gradient(135deg, var(--rose), #c0392b);
+      color: #fff;
+      transition: transform var(--transition), box-shadow var(--transition), opacity var(--transition);
+      box-shadow: 0 4px 20px rgba(255,77,109,0.3);
+    }
+    .btn-record:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(255,77,109,0.45); }
+    .btn-record:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-stop {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 36px; border-radius: 50px; font-weight: 700; font-size: 1rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      transition: background var(--transition), transform var(--transition);
+    }
+    .btn-stop:hover:not(:disabled) { background: rgba(255,255,255,0.14); transform: translateY(-2px); }
+    .btn-stop:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Recording pulse indicator */
+    .rec-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255,77,109,0.1);
+      border: 1px solid rgba(255,77,109,0.3);
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--rose);
+      display: none;
+    }
+    .rec-dot.show { display: inline-flex; }
+    .rec-dot-circle { width: 8px; height: 8px; background: var(--rose); border-radius: 50%; animation: pulse-dot 1s infinite; }
+
+    /* Progress / Loader */
+    .processing-bar {
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 24px 0;
+      display: none;
+    }
+    .processing-bar.show { display: block; }
+    .processing-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--indigo), var(--cyan));
+      border-radius: 2px;
+      animation: progress-anim 2s ease-in-out infinite;
+    }
+    @keyframes progress-anim { 0% { width: 0%; margin-left: 0; } 50% { width: 70%; margin-left: 0; } 100% { width: 0%; margin-left: 100%; } }
+
+    /* Result Box */
+    #resultSection { margin-top: 32px; display: none; }
+    #resultSection.show { display: block; }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .result-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); }
+    .result-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+    .result-meta span {
+      font-size: 0.75rem; font-weight: 600;
+      color: var(--text-2);
+      background: rgba(255,255,255,0.05);
+      padding: 4px 10px; border-radius: 6px;
+    }
+    .result-meta span b { color: var(--indigo-l); }
+    #transcriptBox {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      font-size: 1rem;
+      line-height: 1.75;
+      color: var(--text-1);
+      min-height: 120px;
       user-select: text;
+      resize: vertical;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
-   @media (max-width: 768px) {
-  body {
-    padding: 10px;
-    font-size: 16px;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    text-align: center;
-  }
-
-  .btn {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
-    font-size: 1rem;
-    padding: 12px;
-  }
-
-  #audioFile,
-  select {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
-  }
-
-  .result, form {
-    font-size: 1rem;
-    padding: 12px 16px;
-    word-wrap: break-word;
-  
-      }
+    #transcriptBox.error { color: var(--rose); border-color: rgba(255,77,109,0.3); }
+    .action-bar {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
     }
-    
+    .btn-action {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 18px; border-radius: var(--radius-sm);
+      font-size: 0.85rem; font-weight: 600;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text-1);
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+    }
+    .btn-action:hover { background: rgba(255,255,255,0.1); border-color: var(--border-hov); transform: translateY(-2px); }
+    .btn-action.primary-action {
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      border-color: transparent;
+      box-shadow: 0 4px 16px rgba(108,99,255,0.3);
+    }
+    .btn-action.primary-action:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.45); }
+    .copied-toast {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--emerald); color: #000;
+      padding: 12px 24px; border-radius: 50px;
+      font-weight: 700; font-size: 0.875rem;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 999; pointer-events: none;
+    }
+    .copied-toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* History Panel */
+    .history-toggle {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 36px;
+      padding: 14px 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-2);
+      font-size: 0.9rem; font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      justify-content: space-between;
+      transition: background var(--transition), color var(--transition);
+    }
+    .history-toggle:hover { background: rgba(255,255,255,0.07); color: var(--text-1); }
+    .history-arrow { transition: transform var(--transition); }
+    .history-arrow.open { transform: rotate(180deg); }
+    #historyPanel {
+      margin-top: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #historyPanel.open { display: flex; }
+    .history-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .history-item:hover { background: rgba(108,99,255,0.08); border-color: rgba(108,99,255,0.3); }
+    .history-meta { font-size: 0.75rem; color: var(--text-3); margin-bottom: 4px; display: flex; gap: 12px; }
+    .history-preview { font-size: 0.875rem; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .empty-history { text-align: center; padding: 32px; color: var(--text-3); font-size: 0.875rem; }
+
+    /* ── Pricing ───────────────────────────────────────────────── */
+    #pricing {
+      background: linear-gradient(180deg, transparent, rgba(108,99,255,0.04) 50%, transparent);
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 0;
+    }
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+    }
+    .pricing-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-glow); }
+    .pricing-card.featured {
+      border-color: var(--indigo);
+      background: rgba(108,99,255,0.06);
+      box-shadow: 0 0 40px rgba(108,99,255,0.2);
+    }
+    .pricing-card.featured::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 30%; right: 30%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--indigo), var(--cyan), transparent);
+    }
+    .plan-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      color: #fff;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 4px 10px; border-radius: 50px;
+      margin-bottom: 16px;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .plan-name { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
+    .plan-price { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 8px; }
+    .plan-amount { font-size: 3rem; font-weight: 900; line-height: 1; }
+    .plan-amount.gradient-text { line-height: 1; }
+    .plan-period { color: var(--text-2); margin-bottom: 8px; font-size: 0.9rem; }
+    .plan-desc { color: var(--text-2); font-size: 0.875rem; margin-bottom: 28px; line-height: 1.6; }
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .plan-features li { display: flex; align-items: center; gap: 10px; font-size: 0.875rem; }
+    .check { color: var(--emerald); font-size: 1rem; flex-shrink: 0; }
+    .cross { color: var(--text-3); font-size: 1rem; flex-shrink: 0; }
+    .plan-features li.disabled { color: var(--text-3); }
+    .btn-plan {
+      width: 100%; padding: 14px; border-radius: var(--radius-sm);
+      font-weight: 700; font-size: 0.95rem;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .btn-plan-primary {
+      background: linear-gradient(135deg, var(--indigo), var(--cyan));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.35);
+    }
+    .btn-plan-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(108,99,255,0.5); }
+    .btn-plan-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-1);
+    }
+    .btn-plan-ghost:hover { border-color: var(--border-hov); background: rgba(108,99,255,0.06); transform: translateY(-2px); }
+
+    /* ── Footer ────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 60px 0 36px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      margin-bottom: 48px;
+    }
+    .footer-brand p { color: var(--text-2); font-size: 0.875rem; line-height: 1.7; margin-top: 12px; max-width: 260px; }
+    .footer-col h4 { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-3); margin-bottom: 16px; }
+    .footer-col a { display: block; color: var(--text-2); font-size: 0.875rem; margin-bottom: 10px; transition: color var(--transition); }
+    .footer-col a:hover { color: var(--text-1); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 28px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+    }
+    .footer-bottom p { font-size: 0.8rem; color: var(--text-3); }
+
+    /* ── Scroll Reveal ─────────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      section { padding: 70px 0; }
+      .nav-links { display: none; }
+      .app-wrapper { padding: 28px 20px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .hero-stats { gap: 28px; }
+      .tab-bar { width: 100%; }
+      .tab-btn { flex: 1; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .footer-grid { grid-template-columns: 1fr; }
+      .action-bar { flex-direction: column; }
+      .btn-action { justify-content: center; }
+    }
   </style>
 </head>
 <body>
-  <h1>⚡ Speech Recognition</h1>
-  
-  <form id="upload-form">
-    <input type="file" id="audioFile" accept="audio/*" />
-    <button type="submit" class="btn">Upload & Transcribe</button>
-  </form>
 
-  <div id="uploadResult" class="result"></div>
+<!-- Ambient Orbs -->
+<div class="orb orb-1" aria-hidden="true"></div>
+<div class="orb orb-2" aria-hidden="true"></div>
+<div class="orb orb-3" aria-hidden="true"></div>
 
-  <button id="recordBtn" class="btn">Start Recording</button>
-  <button id="stopBtn" class="btn" disabled>Stop Recording</button>
+<!-- Toast Notification -->
+<div class="copied-toast" id="toast">✓ Copied to clipboard!</div>
 
-  <div id="recordResult" class="result"></div>
+<!-- ── Navigation ──────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="logo-icon">🎙️</div>
+      <span class="logo-text">VoiceScribe</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#app">Try It</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <a href="#app" class="nav-cta">Get Started Free →</a>
+  </div>
+</nav>
 
-  <form id="downloadForm" style="display:none;">
-    <input type="hidden" name="text" id="pdfText" />
-    <button type="submit" id="downloadBtn" class="btn">📄 Download PDF</button>
-  </form>
+<!-- ── Hero ───────────────────────────────────────────────────────────────── -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-badge reveal">
+      <span></span>
+      AI-Powered Speech Recognition — v2.0 Live
+    </div>
+    <h1 class="hero-title reveal reveal-delay-1">
+      Turn Any Voice Into<br />
+      <span class="gradient-text">Precise Text Instantly</span>
+    </h1>
+    <p class="hero-sub reveal reveal-delay-2">
+      Upload an audio file or record live. VoiceScribe transcribes speech in 25+ languages with industry-grade accuracy — then export as PDF or TXT in one click.
+    </p>
+    <div class="hero-actions reveal reveal-delay-3">
+      <a href="#app" class="btn-primary">🚀 Start Transcribing Free</a>
+      <a href="#features" class="btn-ghost">✦ See All Features</a>
+    </div>
+    <div class="hero-stats reveal reveal-delay-4">
+      <div class="stat"><div class="stat-num">25+</div><div class="stat-label">Languages</div></div>
+      <div class="stat"><div class="stat-num">99%</div><div class="stat-label">Accuracy</div></div>
+      <div class="stat"><div class="stat-num">&lt; 5s</div><div class="stat-label">Avg Response</div></div>
+      <div class="stat"><div class="stat-num">Free</div><div class="stat-label">To Start</div></div>
+    </div>
+  </div>
+</section>
 
-  <script>
-    const uploadForm = document.getElementById('upload-form'),
-          recordBtn = document.getElementById('recordBtn'),
-          stopBtn = document.getElementById('stopBtn'),
-          uploadResult = document.getElementById('uploadResult'),
-          recordResult = document.getElementById('recordResult'),
-          downloadForm = document.getElementById('downloadForm'),
-          pdfText = document.getElementById('pdfText');
+<!-- ── Features ───────────────────────────────────────────────────────────── -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-label">Why VoiceScribe</div>
+      <h2 class="section-title">Everything You Need<br /><span class="gradient-text">All in One Place</span></h2>
+      <p class="section-sub">Built for professionals, students, journalists, and creators who demand accuracy and speed.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon icon-indigo">🌐</div>
+        <h3>25+ Languages</h3>
+        <p>Transcribe in English, Spanish, French, Hindi, Japanese, Arabic, Chinese, and 18 more language locales with high precision.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon icon-cyan">⚡</div>
+        <h3>Lightning Fast</h3>
+        <p>Powered by Google Speech API. Most files return transcription results in under 5 seconds regardless of file size.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon icon-emerald">🎤</div>
+        <h3>Live Recording</h3>
+        <p>Record directly from your microphone with a real-time animated waveform visualizer. Stop and transcribe instantly.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="feature-icon icon-amber">📄</div>
+        <h3>Export Anywhere</h3>
+        <p>Download your transcripts as formatted PDF documents or plain TXT files — ready to share or archive.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-5">
+        <div class="feature-icon icon-rose">🕓</div>
+        <h3>Transcript History</h3>
+        <p>Your last 10 transcriptions are saved locally in your browser. Restore any previous result with a single click.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon icon-purple">🔒</div>
+        <h3>Privacy First</h3>
+        <p>Audio files are processed and immediately discarded. No recordings are stored on our servers — ever.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-    uploadForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      const fileEl = document.getElementById('audioFile');
-      uploadResult.textContent = "⏳ Processing...";
+<!-- ── App Panel ───────────────────────────────────────────────────────────── -->
+<section id="app">
+  <div class="container">
+    <div class="section-header reveal" style="text-align:center">
+      <div class="section-label">Live Transcription</div>
+      <h2 class="section-title">Try VoiceScribe <span class="gradient-text">Right Now</span></h2>
+      <p class="section-sub" style="margin:0 auto">No sign-up required. Works in any modern browser.</p>
+    </div>
 
-      const fd = new FormData();
-      fd.append('file', fileEl.files[0]);
+    <div class="app-wrapper reveal reveal-delay-1">
+      <!-- Top Bar -->
+      <div class="app-top">
+        <div class="app-top-left">
+          <h2>🎙️ Transcription Studio</h2>
+          <p>Upload a file or record your voice to get started</p>
+        </div>
+        <div class="lang-wrapper">
+          <label for="langSelect">🌐 Language</label>
+          <select id="langSelect">
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="es-ES">Spanish</option>
+            <option value="fr-FR">French</option>
+            <option value="de-DE">German</option>
+            <option value="it-IT">Italian</option>
+            <option value="pt-BR">Portuguese (Brazil)</option>
+            <option value="ru-RU">Russian</option>
+            <option value="zh-CN">Chinese (Simplified)</option>
+            <option value="zh-TW">Chinese (Traditional)</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+            <option value="ar-SA">Arabic</option>
+            <option value="hi-IN">Hindi</option>
+            <option value="tr-TR">Turkish</option>
+            <option value="nl-NL">Dutch</option>
+            <option value="pl-PL">Polish</option>
+            <option value="sv-SE">Swedish</option>
+            <option value="da-DK">Danish</option>
+            <option value="fi-FI">Finnish</option>
+            <option value="no-NO">Norwegian</option>
+            <option value="id-ID">Indonesian</option>
+            <option value="ms-MY">Malay</option>
+            <option value="th-TH">Thai</option>
+            <option value="vi-VN">Vietnamese</option>
+            <option value="ta-IN">Tamil</option>
+            <option value="te-IN">Telugu</option>
+          </select>
+        </div>
+      </div>
 
-      try {
-        const res = await fetch('/upload', {method: 'POST', body: fd});
-        const data = await res.json();
-        uploadResult.textContent = data.text ?? data.err ?? "Error: No response";
-        if(data.text){
-          pdfText.value = data.text;
-          downloadForm.style.display = 'block';
-        } else {
-          downloadForm.style.display = 'none';
-        }
-      } catch (err) {
-        uploadResult.textContent = "❌ Upload failed: " + err.message;
-        downloadForm.style.display = 'none';
-      }
+      <!-- Tabs -->
+      <div class="tab-bar" role="tablist">
+        <button class="tab-btn active" id="tab-upload" role="tab" onclick="switchTab('upload')">📂 Upload File</button>
+        <button class="tab-btn" id="tab-record" role="tab" onclick="switchTab('record')">🎤 Live Record</button>
+      </div>
+
+      <!-- Upload Tab -->
+      <div class="tab-panel active" id="panel-upload">
+        <div id="dropZone" onclick="document.getElementById('fileInput').click()"
+             ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+          <input type="file" id="fileInput" accept="audio/*" onchange="handleFileSelect(this)" />
+          <span class="drop-icon">📁</span>
+          <div class="drop-title">Drag &amp; drop your audio file here</div>
+          <div class="drop-sub">or click to browse from your device</div>
+          <div class="file-types">
+            <span class="file-badge">WAV</span>
+            <span class="file-badge">MP3</span>
+            <span class="file-badge">FLAC</span>
+            <span class="file-badge">OGG</span>
+            <span class="file-badge">M4A</span>
+          </div>
+        </div>
+        <div id="selectedFile">
+          <span>📎</span>
+          <span id="selectedFileName">—</span>
+          <span id="selectedFileSize" style="color:var(--text-3); margin-left:auto;"></span>
+        </div>
+        <button class="btn-upload" id="transcribeBtn" onclick="transcribeUpload()" disabled>
+          ⚡ Transcribe Audio
+        </button>
+      </div>
+
+      <!-- Record Tab -->
+      <div class="tab-panel" id="panel-record">
+        <div class="record-center">
+          <div class="rec-dot" id="recDot">
+            <span class="rec-dot-circle"></span> Recording
+          </div>
+          <div class="waveform-container" id="waveformContainer">
+            <!-- bars injected by JS -->
+          </div>
+          <div class="record-timer" id="recordTimer">00:00</div>
+          <div class="record-status" id="recordStatus">Ready to record. Click the button below to start.</div>
+          <div class="record-actions">
+            <button class="btn-record" id="recordBtn" onclick="startRecording()">⏺ Start Recording</button>
+            <button class="btn-stop" id="stopBtn" disabled onclick="stopRecording()">⏹ Stop</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Processing Bar -->
+      <div class="processing-bar" id="processingBar">
+        <div class="processing-fill"></div>
+      </div>
+
+      <!-- Result Section -->
+      <div id="resultSection">
+        <div class="result-header">
+          <span class="result-label">📝 Transcription Result</span>
+          <div class="result-meta">
+            <span>Words: <b id="wordCount">—</b></span>
+            <span>Duration: <b id="audioDuration">—</b></span>
+          </div>
+        </div>
+        <div id="transcriptBox"></div>
+        <div class="action-bar">
+          <button class="btn-action primary-action" onclick="copyTranscript()">📋 Copy Text</button>
+          <button class="btn-action" onclick="downloadPDF()">📄 Download PDF</button>
+          <button class="btn-action" onclick="downloadTXT()">📝 Download TXT</button>
+          <button class="btn-action" onclick="shareTranscript()">↗ Share</button>
+        </div>
+      </div>
+
+      <!-- History -->
+      <button class="history-toggle" onclick="toggleHistory()" id="historyToggle">
+        <span>🕓 Transcript History</span>
+        <span class="history-arrow" id="historyArrow">▼</span>
+      </button>
+      <div id="historyPanel">
+        <div class="empty-history" id="emptyHistory">No previous transcriptions yet. Transcribe something to see history here.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pricing ─────────────────────────────────────────────────────────────── -->
+<section id="pricing">
+  <div class="container">
+    <div class="section-header reveal" style="text-align:center">
+      <div class="section-label">Simple Pricing</div>
+      <h2 class="section-title">Start Free, <span class="gradient-text">Scale Anytime</span></h2>
+      <p class="section-sub" style="margin:0 auto">No credit card required. Cancel anytime.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card reveal reveal-delay-1">
+        <div class="plan-name">Free</div>
+        <div class="plan-price"><span class="plan-amount">$0</span></div>
+        <div class="plan-period">per month, forever</div>
+        <div class="plan-desc">Perfect for individuals and personal projects with light transcription needs.</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> 60 min / month</li>
+          <li><span class="check">✓</span> 5 languages</li>
+          <li><span class="check">✓</span> PDF & TXT export</li>
+          <li><span class="check">✓</span> File upload & live record</li>
+          <li class="disabled"><span class="cross">✗</span> Priority processing</li>
+          <li class="disabled"><span class="cross">✗</span> API access</li>
+        </ul>
+        <button class="btn-plan btn-plan-ghost" onclick="document.getElementById('app').scrollIntoView({behavior:'smooth'})">Get Started Free</button>
+      </div>
+      <!-- Pro (featured) -->
+      <div class="pricing-card featured reveal reveal-delay-2">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price"><span class="plan-amount gradient-text">$12</span></div>
+        <div class="plan-period">per month, billed monthly</div>
+        <div class="plan-desc">Ideal for content creators, journalists, and remote teams who transcribe daily.</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> 600 min / month</li>
+          <li><span class="check">✓</span> All 27 languages</li>
+          <li><span class="check">✓</span> PDF, TXT &amp; SRT export</li>
+          <li><span class="check">✓</span> Priority processing</li>
+          <li><span class="check">✓</span> Transcript history (unlimited)</li>
+          <li class="disabled"><span class="cross">✗</span> API access</li>
+        </ul>
+        <button class="btn-plan btn-plan-primary">Upgrade to Pro</button>
+      </div>
+      <!-- Enterprise -->
+      <div class="pricing-card reveal reveal-delay-3">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price"><span class="plan-amount">$49</span></div>
+        <div class="plan-period">per month, billed annually</div>
+        <div class="plan-desc">For teams and businesses needing bulk processing and API integration.</div>
+        <ul class="plan-features">
+          <li><span class="check">✓</span> Unlimited minutes</li>
+          <li><span class="check">✓</span> All 27 languages</li>
+          <li><span class="check">✓</span> All export formats</li>
+          <li><span class="check">✓</span> Dedicated API key</li>
+          <li><span class="check">✓</span> SSO &amp; team seats</li>
+          <li><span class="check">✓</span> SLA &amp; priority support</li>
+        </ul>
+        <button class="btn-plan btn-plan-ghost">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-logo" style="margin-bottom:0">
+          <div class="logo-icon">🎙️</div>
+          <span class="logo-text" style="font-size:1.2rem; font-weight:800;">VoiceScribe</span>
+        </div>
+        <p>The modern AI speech-to-text platform built for accuracy, speed, and simplicity.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#app">Try Free</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="#">Documentation</a>
+        <a href="#">API Reference</a>
+        <a href="#">Changelog</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 VoiceScribe. All rights reserved.</p>
+      <p>Built with ❤️ using Python &amp; Flask</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── Waveform Bars ──────────────────────────────────────────────────────── */
+  const wfc = document.getElementById('waveformContainer');
+  const BAR_COUNT = 40;
+  const bars = [];
+  for (let i = 0; i < BAR_COUNT; i++) {
+    const b = document.createElement('div');
+    b.className = 'wave-bar';
+    wfc.appendChild(b);
+    bars.push(b);
+  }
+
+  let waveAnimId = null;
+  let analyser, dataArr, micStream;
+
+  function startWaveform(stream) {
+    const ctx = new AudioContext();
+    const src = ctx.createMediaStreamSource(stream);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 128;
+    src.connect(analyser);
+    dataArr = new Uint8Array(analyser.frequencyBinCount);
+    drawWave();
+  }
+
+  function drawWave() {
+    waveAnimId = requestAnimationFrame(drawWave);
+    analyser.getByteFrequencyData(dataArr);
+    const step = Math.floor(dataArr.length / BAR_COUNT);
+    bars.forEach((b, i) => {
+      const val = dataArr[i * step] || 0;
+      b.style.height = Math.max(4, val * 0.55) + 'px';
     });
+  }
 
-    let recorder, chunks = [], stream;
+  function stopWaveform() {
+    if (waveAnimId) { cancelAnimationFrame(waveAnimId); waveAnimId = null; }
+    bars.forEach(b => { b.style.height = '6px'; });
+  }
 
-    recordBtn.addEventListener('click', async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        return alert("Microphone access is not supported by your browser.");
-      }
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        recorder = new MediaRecorder(stream);
-        chunks = [];
+  /* ── Recording Timer ────────────────────────────────────────────────────── */
+  let timerInterval = null, timerSecs = 0;
+  function startTimer() {
+    timerSecs = 0;
+    timerInterval = setInterval(() => {
+      timerSecs++;
+      const m = String(Math.floor(timerSecs / 60)).padStart(2, '0');
+      const s = String(timerSecs % 60).padStart(2, '0');
+      document.getElementById('recordTimer').textContent = m + ':' + s;
+    }, 1000);
+  }
+  function stopTimer() { clearInterval(timerInterval); }
 
-        recorder.ondataavailable = e => chunks.push(e.data);
+  /* ── Tab Switching ──────────────────────────────────────────────────────── */
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
 
-        recorder.onstop = async () => {
-          recordResult.textContent = "⏳ Processing recording...";
-          const blob = new Blob(chunks);
-          const fd = new FormData();
-          fd.append('audio', blob);
-          try {
-            const res = await fetch('/record', { method: 'POST', body: fd });
-            const data = await res.json();
-            if (data.text) {
-              recordResult.textContent = data.text;
-              pdfText.value = data.text;
-              downloadForm.style.display = 'block';
-            } else {
-              recordResult.textContent = data.err || "No transcription received.";
-              downloadForm.style.display = 'none';
-            }
-          } catch (err) {
-            recordResult.textContent = "❌ Error: " + err.message;
-            downloadForm.style.display = 'none';
-          }
-          stream.getTracks().forEach(track => track.stop());
-        };
+  /* ── Drag & Drop ────────────────────────────────────────────────────────── */
+  function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('dragover'); }
+  function handleDragLeave(e) { document.getElementById('dropZone').classList.remove('dragover'); }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  }
+  function handleFileSelect(input) {
+    if (input.files[0]) setFile(input.files[0]);
+  }
+  function setFile(f) {
+    const sel = document.getElementById('selectedFile');
+    document.getElementById('selectedFileName').textContent = f.name;
+    document.getElementById('selectedFileSize').textContent = (f.size / 1024 / 1024).toFixed(2) + ' MB';
+    sel.style.display = 'flex';
+    document.getElementById('transcribeBtn').disabled = false;
+    // attach to hidden input
+    const dt = new DataTransfer();
+    dt.items.add(f);
+    document.getElementById('fileInput').files = dt.files;
+  }
 
-        recorder.start();
-        recordBtn.disabled = true;
-        stopBtn.disabled = false;
-        recordResult.textContent = "🎙️ Recording...";
-      } catch (err) {
-        alert("Could not start recording: " + err.message);
-      }
+  /* ── Upload & Transcribe ────────────────────────────────────────────────── */
+  async function transcribeUpload() {
+    const fi = document.getElementById('fileInput');
+    if (!fi.files[0]) return showError('Please select a file first.');
+    const lang = document.getElementById('langSelect').value;
+    const fd = new FormData();
+    fd.append('file', fi.files[0]);
+    fd.append('lang', lang);
+    setProcessing(true);
+    try {
+      const res = await fetch('/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.text) showResult(data);
+      else showError(data.err || 'Transcription failed.');
+    } catch (e) { showError('Network error: ' + e.message); }
+    finally { setProcessing(false); }
+  }
+
+  /* ── Recording ──────────────────────────────────────────────────────────── */
+  let recorder, chunks;
+  async function startRecording() {
+    if (!navigator.mediaDevices?.getUserMedia) return alert('Microphone not supported in this browser.');
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(micStream);
+      chunks = [];
+      recorder.ondataavailable = e => chunks.push(e.data);
+      recorder.onstop = sendRecording;
+      recorder.start();
+      startTimer();
+      startWaveform(micStream);
+      document.getElementById('recordBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+      document.getElementById('recordStatus').textContent = '🔴 Recording in progress… Click Stop when done.';
+      document.getElementById('recDot').classList.add('show');
+    } catch (e) { alert('Could not start recording: ' + e.message); }
+  }
+
+  function stopRecording() {
+    if (recorder && recorder.state === 'recording') recorder.stop();
+    stopTimer();
+    stopWaveform();
+    micStream?.getTracks().forEach(t => t.stop());
+    document.getElementById('recordBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('recordStatus').textContent = '⏳ Processing recording…';
+    document.getElementById('recDot').classList.remove('show');
+  }
+
+  async function sendRecording() {
+    const lang = document.getElementById('langSelect').value;
+    const blob = new Blob(chunks, { type: 'audio/webm' });
+    const fd = new FormData();
+    fd.append('audio', blob, 'recording.webm');
+    fd.append('lang', lang);
+    setProcessing(true);
+    try {
+      const res = await fetch('/record', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.text) showResult(data);
+      else showError(data.err || 'Could not transcribe recording.');
+    } catch (e) { showError('Network error: ' + e.message); }
+    finally {
+      setProcessing(false);
+      document.getElementById('recordStatus').textContent = 'Ready to record. Click the button below to start.';
+      document.getElementById('recordTimer').textContent = '00:00';
+    }
+  }
+
+  /* ── UI Helpers ─────────────────────────────────────────────────────────── */
+  function setProcessing(on) {
+    const bar = document.getElementById('processingBar');
+    bar.classList.toggle('show', on);
+    if (on) hideResult();
+  }
+
+  function showResult(data) {
+    const box = document.getElementById('transcriptBox');
+    box.textContent = data.text;
+    box.classList.remove('error');
+    document.getElementById('wordCount').textContent = data.word_count ?? '—';
+    document.getElementById('audioDuration').textContent = data.duration_seconds != null ? data.duration_seconds + 's' : '—';
+    const sec = document.getElementById('resultSection');
+    sec.classList.add('show');
+    sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    saveToHistory(data);
+    renderHistory();
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('transcriptBox');
+    box.textContent = '⚠️ ' + msg;
+    box.classList.add('error');
+    document.getElementById('resultSection').classList.add('show');
+    document.getElementById('wordCount').textContent = '—';
+    document.getElementById('audioDuration').textContent = '—';
+  }
+
+  function hideResult() {
+    document.getElementById('resultSection').classList.remove('show');
+  }
+
+  /* ── Actions ────────────────────────────────────────────────────────────── */
+  function getTranscriptText() {
+    const box = document.getElementById('transcriptBox');
+    return (box.classList.contains('error')) ? '' : box.textContent;
+  }
+
+  function copyTranscript() {
+    const t = getTranscriptText();
+    if (!t) return;
+    navigator.clipboard.writeText(t).then(() => showToast('✓ Copied to clipboard!'));
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2500);
+  }
+
+  async function downloadPDF() {
+    const t = getTranscriptText();
+    if (!t) return;
+    const fd = new FormData();
+    fd.append('text', t);
+    try {
+      const res = await fetch('/download_pdf', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Failed');
+      const blob = await res.blob();
+      triggerDownload(blob, 'voicescribe-transcript.pdf');
+    } catch (e) { alert('PDF download failed: ' + e.message); }
+  }
+
+  async function downloadTXT() {
+    const t = getTranscriptText();
+    if (!t) return;
+    const fd = new FormData();
+    fd.append('text', t);
+    try {
+      const res = await fetch('/download_txt', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error('Failed');
+      const blob = await res.blob();
+      triggerDownload(blob, 'voicescribe-transcript.txt');
+    } catch (e) { alert('TXT download failed: ' + e.message); }
+  }
+
+  function triggerDownload(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  async function shareTranscript() {
+    const t = getTranscriptText();
+    if (!t) return;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'VoiceScribe Transcript', text: t }); }
+      catch (e) { /* user cancelled */ }
+    } else {
+      copyTranscript();
+      showToast('📋 Copied — paste to share!');
+    }
+  }
+
+  /* ── History (localStorage) ─────────────────────────────────────────────── */
+  const HISTORY_KEY = 'vs_history';
+  function loadHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
+  function saveToHistory(data) {
+    const history = loadHistory();
+    history.unshift({
+      text: data.text,
+      word_count: data.word_count,
+      duration_seconds: data.duration_seconds,
+      lang: document.getElementById('langSelect').options[document.getElementById('langSelect').selectedIndex].text,
+      ts: new Date().toLocaleString()
     });
+    if (history.length > 10) history.pop();
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
 
-    stopBtn.addEventListener('click', () => {
-      if (recorder && recorder.state === 'recording') {
-        recorder.stop();
-        stopBtn.disabled = true;
-        recordBtn.disabled = false;
-      }
+  function renderHistory() {
+    const history = loadHistory();
+    const panel = document.getElementById('historyPanel');
+    const empty = document.getElementById('emptyHistory');
+    // Remove all except emptyHistory
+    [...panel.children].forEach(c => { if (c !== empty) c.remove(); });
+    if (!history.length) {
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    history.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      div.innerHTML = `
+        <div class="history-meta">
+          <span>${item.ts}</span>
+          <span>${item.lang}</span>
+          <span>${item.word_count} words</span>
+        </div>
+        <div class="history-preview">${item.text}</div>
+      `;
+      div.addEventListener('click', () => {
+        const box = document.getElementById('transcriptBox');
+        box.textContent = item.text;
+        box.classList.remove('error');
+        document.getElementById('wordCount').textContent = item.word_count;
+        document.getElementById('audioDuration').textContent = item.duration_seconds != null ? item.duration_seconds + 's' : '—';
+        document.getElementById('resultSection').classList.add('show');
+        document.getElementById('app').scrollIntoView({ behavior: 'smooth' });
+        showToast('📂 Loaded from history');
+      });
+      panel.appendChild(div);
     });
+  }
 
-    downloadForm.addEventListener('submit', async e => {
-      e.preventDefault();
+  function toggleHistory() {
+    const panel = document.getElementById('historyPanel');
+    const arrow = document.getElementById('historyArrow');
+    const open = panel.classList.toggle('open');
+    arrow.classList.toggle('open', open);
+  }
 
-      const fd = new FormData(downloadForm);
+  /* ── Scroll Reveal ──────────────────────────────────────────────────────── */
+  const revealEls = document.querySelectorAll('.reveal');
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  revealEls.forEach(el => revealObs.observe(el));
 
-      try {
-        const response = await fetch('/download_pdf', {
-          method: 'POST',
-          body: fd,
-        });
-
-        if(!response.ok) throw new Error('Failed to download PDF.');
-
-        const blob = await response.blob();
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = "transcript.pdf";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      } catch (err) {
-        alert("Download failed: " + err.message);
-      }
-    });
-  </script>
+  /* ── Init ────────────────────────────────────────────────────────────────── */
+  renderHistory();
+</script>
 </body>
 </html>
